@@ -11,11 +11,16 @@ class DemoFututeWidget extends StatefulWidget {
 }
 
 class _DemoFututeWidgetState extends State<DemoFututeWidget> {
-  Future<int> randomNumber() {
-    Completer<int> completer = Completer();
+  Future<int?> randomNumber() {
+    Completer<int?> completer = Completer();
 
     Future.delayed(Duration(seconds: 2), () {
-      completer.complete(Random().nextInt(1000));
+      var number = Random().nextInt(1000);
+      if (number % 2 == 0) {
+        completer.complete(number);
+      } else {
+        completer.complete(null);
+      }
     });
     return completer.future;
   }
@@ -28,22 +33,21 @@ class _DemoFututeWidgetState extends State<DemoFututeWidget> {
       ),
       body: Container(
         child: Center(
-          child: FutureBuilder<int>(
+          child: FutureBuilder<int?>(
             future: randomNumber(),
             initialData: 0,
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return Text(snapshot.error.toString());
               }
-              return InkWell(
-                onTap: () {
-                  setState(() {});
-                },
-                child: Text(
-                  (snapshot.data ?? 0).toString(),
-                  style: TextStyle(fontSize: 40),
-                ),
-              );
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                  return Text("None ${snapshot.data.toString()}");
+                case ConnectionState.waiting:
+                  return CircularProgressIndicator();
+                default:
+                  return Text("Active ${snapshot.data.toString()}");
+              }
             },
           ),
         ),
